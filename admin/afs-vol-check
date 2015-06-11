@@ -398,7 +398,6 @@ sub check_for_stale_locks_and_failed_releases
 {
     my $vldb = shift;
     my $tx = shift;
-    my %messages = ();
 
     info("checking for stale locks ...");
     VOL: while (my ($id, $v)=each(%{ $vldb->{numbers} })) {
@@ -410,12 +409,6 @@ sub check_for_stale_locks_and_failed_releases
             }
         }
         $v->{stalelock} = 1;
-        if ($v->{op}) {
-            $messages{$id} = "possible stale lock: op $v->{op} $v->{name} ($v->{rw})";
-        }
-        else {
-            $messages{$id} = "possible stale lock: $v->{name} ($v->{rw})";
-        }
     }
 
     info("checking for failed releases ...");
@@ -426,16 +419,21 @@ sub check_for_stale_locks_and_failed_releases
                 info("release in progress: $v->{name} $v->{rw}");
             }
             elsif ($v->{rflags} == REL_NOT) {
-                $messages{$id} = "not released: $v->{name} ($v->{rw})";
+                check_failed("not released: $v->{name} ($v->{rw})");
             }
             else {
-                $messages{$id} = "failed release: $v->{name} ($v->{rw})";
+                check_failed("failed release: $v->{name} ($v->{rw})");
+                $v->{stalelock} = 0;
+            }
+            if ($v->{stalelock}) {
+                if ($v->{op}) {
+                    check_failed("possible stale lock: op $v->{op} $v->{name} ($v->{rw})");
+                }
+                else {
+                    check_failed("possible stale lock: $v->{name} ($v->{rw})");
+                }
             }
         }
-    }
-
-    while (my ($k, $v) = each %messages) {
-        check_failed($v);
     }
 }
 
