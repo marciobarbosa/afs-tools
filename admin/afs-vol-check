@@ -420,6 +420,7 @@ sub check_for_stale_locks_and_failed_releases
             }
             elsif ($v->{rflags} == REL_NOT) {
                 check_failed("not released: $v->{name} ($v->{rw})");
+                $v->{stalelock} = 0;
             }
             else {
                 check_failed("failed release: $v->{name} ($v->{rw})");
