@@ -1252,6 +1252,7 @@ checksignals()
 	if ($SIGNAL_SHUTDOWN) {
 		vlog("shutting down...");
 		stop_collection(undef);
+		spawn_exporter();
 		exit(0);
 	}
 
